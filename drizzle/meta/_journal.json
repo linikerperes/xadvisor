@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1771255191669,
+      "tag": "0000_mean_skin",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1771260177405,
+      "tag": "0001_cooing_leper_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776375586302,
+      "tag": "0002_grey_the_renegades",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1776375603340,
+      "tag": "0003_big_omega_red",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1776375886572,
+      "tag": "0004_loving_sway",
+      "breakpoints": true
+    }
+  ]
+}

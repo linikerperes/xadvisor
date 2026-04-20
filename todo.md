@@ -1,0 +1,57 @@
+# Project TODO
+
+- [x] Dashboard principal com KPIs (AUM, clientes ativos, ticket médio, valor cripto)
+- [x] Preços de criptoativos em tempo real via CoinGecko (BTC, ETH, USDT)
+- [x] Gráfico de distribuição por produto (Pie Chart)
+- [x] Ranking top 8 clientes por patrimônio (Bar Chart)
+- [x] Tabela de clientes recentes
+- [x] Página de listagem de clientes com busca e filtros
+- [x] Página de detalhe do cliente com breakdown de carteira
+- [x] Tema "Black Vault" - preto e dourado
+- [x] Logo personalizado LP
+- [x] Sidebar com navegação
+- [x] Dados dos 94 clientes extraídos do portal Onil Group
+- [x] Patrimônio total corrigido para R$ 7.027.927,18
+- [x] Página de Análise com IA (Gemini via Forge API server-side)
+- [x] Hook useAIAnalysis via tRPC (server-side com BUILT_IN_FORGE_API_KEY)
+- [x] Quick prompts de análise (Rentabilidade, Perfil, Riscos, Crescimento, Relatório, Visão Fora da Caixa)
+- [x] Análise IA individual por cliente (botão no detalhe)
+- [x] Upgrade para full-stack (tRPC + Express + DB)
+- [x] Página de Importação de Dados (CSV upload + entrada manual)
+- [x] Hook useDepositData com localStorage
+- [x] Colunas de depósitos e rendimento na listagem de clientes
+- [x] Seção de depósitos e saques no detalhe do cliente
+- [x] KPIs de capital aportado, rendimento total e rendimento mensal estimado
+- [x] Testes vitest para a rota de IA
+- [x] Calcular valor atual dos criptoativos (BTC/ETH/USDT) em BRL com preços em tempo real
+- [x] Mostrar saldo total em BRL (BRL direto + cripto convertido) por cliente
+- [x] Comparação aporte original vs valor atual na página de detalhe do cliente
+- [x] KPI de valor total da carteira incluindo cripto convertido no Dashboard
+- [x] Coluna de valor cripto em BRL na listagem de clientes
+- [x] Tabela de clientes no banco de dados (schema + migrations)
+- [x] Tabela de depósitos/saques no banco de dados
+- [x] Tabela de snapshots de importação (histórico)
+- [x] Endpoints tRPC para CRUD de clientes e depósitos
+- [x] Endpoint tRPC para importação em lote (bulk import)
+- [x] Página de Sincronização com upload CSV e status de importação
+- [x] Script Python de extração automatizada do portal Onil Group
+- [ ] Migrar dados estáticos do clientData.ts para o banco de dados
+- [x] Testes vitest para os endpoints de importação
+- [x] Mostrar % de cada ativo em relação à carteira no detalhe do cliente
+- [x] Mostrar % de cada ativo em relação ao AUM total no painel principal
+- [x] Barras de progresso visuais com % por ativo no Dashboard e ClientDetail
+- [x] % da carteira em cada contrato ativo no detalhe do cliente
+- [ ] INTEGRAÇÃO: Migrar schema do banco (tabelas CRM: clients completo, familyMembers, importantDates, interactions, portfolioItems, questionnaireResponses, giftHistory, shortLinks, notifications)
+- [ ] INTEGRAÇÃO: Migrar endpoints tRPC do Cliente Advisor (clients CRUD, dashboard stats, reports, gifts, alerts, notifications, questionnaire, shortLinks)
+- [ ] INTEGRAÇÃO: Migrar página ClientForm (formulário completo com dados pessoais, hobbies, preferências)
+- [ ] INTEGRAÇÃO: Migrar página Questionnaire (neurociência DISC com scoring)
+- [ ] INTEGRAÇÃO: Migrar página Gifts (presentes com sugestões IA)
+- [ ] INTEGRAÇÃO: Migrar página Alerts (alertas de datas especiais)
+- [ ] INTEGRAÇÃO: Migrar página Reports (relatórios avançados)
+- [ ] INTEGRAÇÃO: Migrar página Notifications (notificações por e-mail)
+- [ ] INTEGRAÇÃO: Migrar formulário público ClientPublicForm + ShortLinkRedirect
+- [ ] INTEGRAÇÃO: Migrar utilitários (utils-advisor, AvatarUpload, ClientFormLinkModal)
+- [ ] INTEGRAÇÃO: Manter dados Onil (94 clientes, cripto tempo real, % alocação, IA)
+- [ ] INTEGRAÇÃO: Criar botão de sincronização automática com portal Onil (agente extrai dados sem upload)
+- [ ] INTEGRAÇÃO: Atualizar sidebar/navegação com todos os menus unificados
+- [ ] INTEGRAÇÃO: Testes vitest para os novos endpoints

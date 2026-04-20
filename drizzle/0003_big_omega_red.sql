@@ -1,0 +1,1 @@
+ALTER TABLE `notification_settings` MODIFY COLUMN `sendDays` json;

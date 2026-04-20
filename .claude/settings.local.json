@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Read(//Users/linikerperes/.nvm/versions/**)",
+      "Read(//opt/homebrew/**)",
+      "Bash(mdfind -name \"node\" -onlyin /usr/local)",
+      "Bash(mdfind -name \"pnpm\")",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(sudo npm *)",
+      "Bash(corepack enable *)",
+      "Bash(export PATH=\"$HOME/.npm-global/bin:$PATH\")",
+      "Bash(pnpm --version)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm approve-builds *)",
+      "Bash(pnpm rebuild *)",
+      "Bash(yes)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "WebFetch(domain:broker.onilgroup.com.br)",
+      "Bash(pnpm add *)",
+      "Bash(npx playwright *)",
+      "Bash(node scripts/explore-onil.mjs)",
+      "Bash(mysql --version)",
+      "Bash(brew list *)",
+      "Bash(docker --version)",
+      "Bash(node -e ' *)",
+      "Bash(DATABASE_URL='mysql://root:@127.0.0.1:3306/lp_advisor' pnpm drizzle-kit push)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)"
+    ]
+  }
+}
