@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm", "chromium", "nss", "atk", "cups", "gtk3", "alsa-lib", "libdrm", "mesa", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "xorg.libXcursor", "xorg.libXi"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = [
+  "pnpm approve-builds || true",
+  "npx playwright install chromium --with-deps || true",
+  "pnpm build"
+]
+
+[start]
+cmd = "node dist/index.js"
