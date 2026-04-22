@@ -28,7 +28,14 @@
       "Bash(DATABASE_URL='mysql://root:@127.0.0.1:3306/lp_advisor' pnpm drizzle-kit push)",
       "Bash(git init *)",
       "Bash(git remote *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh auth *)",
+      "Bash(DATABASE_URL='mysql://root:yLTcsPuAMiqvxAvmksNDwEqhAXwwtBWg@metro.proxy.rlwy.net:42958/railway' pnpm drizzle-kit push)",
+      "WebFetch(domain:xadvisor-production.up.railway.app)",
+      "WebFetch(domain:linikerperes.com)",
+      "Bash(git commit -m 'fix: auth guard usa useEffect para redirect seguro *)"
     ]
   }
 }

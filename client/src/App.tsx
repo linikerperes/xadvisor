@@ -5,6 +5,7 @@ import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
+import { useEffect } from "react";
 
 // Onil / Portfólio
 import Dashboard from "./pages/Dashboard";
@@ -37,16 +38,23 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const [location, navigate] = useLocation();
   const { data: user, isLoading } = trpc.auth.me.useQuery();
 
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/landing");
+    }
+  }, [isLoading, user, navigate]);
+
   if (isLoading) return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
-  if (!user) {
-    navigate("/landing");
-    return null;
-  }
+  if (!user) return (
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return <>{children}</>;
 }
