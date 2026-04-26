@@ -25,8 +25,13 @@ export const users = mysqlTable("users", {
   onilEmail: varchar("onilEmail", { length: 320 }),
   onilPasswordEnc: text("onilPasswordEnc"),      // AES-256 encrypted
   companyName: varchar("companyName", { length: 255 }),
-  subscriptionStatus: mysqlEnum("subscriptionStatus", ["trial", "active", "expired"]).default("trial"),
+  subscriptionStatus: mysqlEnum("subscriptionStatus", ["trial", "active", "expired", "canceled"]).default("trial"),
   trialEndsAt: timestamp("trialEndsAt"),
+  // Stripe
+  stripeCustomerId: varchar("stripeCustomerId", { length: 128 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 128 }),
+  stripePriceId: varchar("stripePriceId", { length: 128 }),
+  stripeCurrentPeriodEnd: timestamp("stripeCurrentPeriodEnd"),
 });
 
 export type User = typeof users.$inferSelect;

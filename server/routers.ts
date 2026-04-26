@@ -834,6 +834,62 @@ export const appRouter = router({
         return { success: true, name: result.name, company: result.company };
       }),
 
+    // ── Stripe: criar checkout de assinatura ────────────────────────────────
+    createCheckout: publicProcedure
+      .input(z.object({ plan: z.enum(["starter", "pro"]), email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        const { stripe, STRIPE_PRICES } = await import("./_core/stripe");
+        if (!stripe) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Pagamentos não configurados" });
+
+        const priceId = input.plan === "starter" ? STRIPE_PRICES.starter : STRIPE_PRICES.pro;
+        if (!priceId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Price ID do plano ${input.plan} não configurado` });
+
+        const baseUrl = process.env.APP_URL || "https://linikerperes.com";
+
+        const session = await stripe.checkout.sessions.create({
+          mode: "subscription",
+          payment_method_types: ["card"],
+          customer_email: input.email,
+          line_items: [{ price: priceId, quantity: 1 }],
+          success_url: `${baseUrl}/login?checkout=success`,
+          cancel_url: `${baseUrl}/landing?checkout=canceled`,
+          subscription_data: {
+            trial_period_days: 14,
+            metadata: { plan: input.plan },
+          },
+          metadata: { plan: input.plan },
+          locale: "pt-BR",
+        });
+
+        return { url: session.url };
+      }),
+
+    // ── Stripe: portal do cliente (gerenciar/cancelar) ───────────────────────
+    createPortal: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        const { stripe } = await import("./_core/stripe");
+        if (!stripe) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Pagamentos não configurados" });
+
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB indisponível" });
+
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+
+        if (!user?.stripeCustomerId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Nenhuma assinatura ativa encontrada" });
+        }
+
+        const baseUrl = process.env.APP_URL || "https://linikerperes.com";
+        const portalSession = await stripe.billingPortal.sessions.create({
+          customer: user.stripeCustomerId,
+          return_url: `${baseUrl}/`,
+        });
+
+        return { url: portalSession.url };
+      }),
+
     // Retorna notícias macro + cripto
     news: publicProcedure.query(async () => {
       try {

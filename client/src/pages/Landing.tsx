@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { Shield, TrendingUp, Bell, Users, RefreshCw, ChevronRight, Check } from "lucide-react";
+import { Shield, TrendingUp, Bell, Users, RefreshCw, ChevronRight, Check, Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663361146918/vjDNWCRBVbSbAMfa.png";
 
@@ -14,16 +16,18 @@ const features = [
 
 const plans = [
   {
+    key: "starter" as const,
     name: "Starter",
-    price: "R$ 97",
+    price: "R$ 197",
     period: "/mês",
     features: ["Até 50 clientes", "Sync automático Onil", "Dashboard completo", "Alertas de vencimento"],
     cta: "Começar grátis",
     highlighted: false,
   },
   {
+    key: "pro" as const,
     name: "Pro",
-    price: "R$ 197",
+    price: "R$ 497",
     period: "/mês",
     features: ["Clientes ilimitados", "Tudo do Starter", "CRM completo", "Análise com IA", "Notícias em tempo real", "Suporte prioritário"],
     cta: "Assinar Pro",
@@ -33,13 +37,68 @@ const plans = [
 
 export default function Landing() {
   const [, navigate] = useLocation();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [showEmailModal, setShowEmailModal] = useState<"starter" | "pro" | null>(null);
+
+  const createCheckout = trpc.auth.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) window.location.href = data.url;
+    },
+    onError: (err) => {
+      alert("Erro ao iniciar pagamento: " + err.message);
+      setLoadingPlan(null);
+    },
+  });
+
+  const handlePlanClick = (plan: "starter" | "pro") => {
+    setShowEmailModal(plan);
+  };
+
+  const handleCheckout = async () => {
+    if (!email || !showEmailModal) return;
+    setLoadingPlan(showEmailModal);
+    setShowEmailModal(null);
+    await createCheckout.mutateAsync({ plan: showEmailModal, email });
+    setLoadingPlan(null);
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white"
       style={{ fontFamily: "var(--font-display)" }}>
 
+      {/* Modal de email para checkout */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
+            <h3 className="text-lg font-bold mb-1">Qual seu e-mail?</h3>
+            <p className="text-sm text-muted-foreground mb-4">Você será redirecionado ao checkout seguro do Stripe.</p>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleCheckout()}
+              placeholder="seu@email.com"
+              autoFocus
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm mb-4 outline-none focus:border-gold/50"
+            />
+            <div className="flex gap-2">
+              <button onClick={() => setShowEmailModal(null)}
+                className="flex-1 border border-white/10 py-2.5 rounded-lg text-sm hover:border-white/20 transition-colors">
+                Cancelar
+              </button>
+              <button onClick={handleCheckout}
+                disabled={!email}
+                className="flex-1 bg-gold hover:bg-gold/90 text-black font-bold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50">
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-sm">
+      <nav className="fixed top-0 left-0 right-0 z-40 border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <img src={LOGO_URL} alt="X-Advisor" className="h-8 w-8 object-contain" />
@@ -68,7 +127,7 @@ export default function Landing() {
             Dashboard completo para assessores do Onil Group. Sync automático, alertas de vencimento, CRM e análise com IA.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button onClick={() => navigate("/login")}
+            <button onClick={() => handlePlanClick("pro")}
               className="bg-gold hover:bg-gold/90 text-black font-bold px-8 py-3.5 rounded-xl text-base w-full sm:w-auto flex items-center justify-center gap-2 transition-colors">
               Começar grátis — 14 dias
               <ChevronRight className="w-4 h-4" />
@@ -78,7 +137,7 @@ export default function Landing() {
               Já tenho conta
             </button>
           </div>
-          <p className="text-xs text-muted-foreground mt-4">Sem cartão de crédito · Cancele quando quiser</p>
+          <p className="text-xs text-muted-foreground mt-4">14 dias grátis · Sem compromisso · Cancele quando quiser</p>
         </div>
       </section>
 
@@ -104,7 +163,9 @@ export default function Landing() {
       <section className="py-16 px-6 border-t border-white/5">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-3">Planos simples e transparentes</h2>
-          <p className="text-sm text-muted-foreground text-center mb-10" style={{ fontFamily: "system-ui" }}>14 dias grátis em qualquer plano. Sem compromisso.</p>
+          <p className="text-sm text-muted-foreground text-center mb-10" style={{ fontFamily: "system-ui" }}>
+            14 dias grátis em qualquer plano. Sem compromisso.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {plans.map((plan) => (
               <div key={plan.name}
@@ -125,9 +186,17 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => navigate("/login")}
-                  className={`w-full py-2.5 rounded-lg font-bold text-sm transition-colors ${plan.highlighted ? "bg-gold hover:bg-gold/90 text-black" : "border border-white/20 hover:border-white/40"}`}>
-                  {plan.cta}
+                <button
+                  onClick={() => handlePlanClick(plan.key)}
+                  disabled={loadingPlan === plan.key}
+                  className={`w-full py-2.5 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2
+                    ${plan.highlighted
+                      ? "bg-gold hover:bg-gold/90 text-black"
+                      : "border border-white/20 hover:border-white/40"
+                    } disabled:opacity-60`}>
+                  {loadingPlan === plan.key
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Aguarde...</>
+                    : plan.cta}
                 </button>
               </div>
             ))}
