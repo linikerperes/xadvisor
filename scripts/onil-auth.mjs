@@ -30,15 +30,17 @@ async function validateOnil(email, senha) {
   const page = await context.newPage();
 
   try {
-    await page.goto('https://broker.onilgroup.com.br/login', { waitUntil: 'networkidle', timeout: 40000 });
+    // domcontentloaded evita ficar preso em conexões Cloudflare abertas
+    await page.goto('https://broker.onilgroup.com.br/login', { waitUntil: 'domcontentloaded', timeout: 40000 });
 
-    // Aguarda o Cloudflare challenge passar (se houver)
+    // Aguarda o Cloudflare challenge passar (título muda de "Just a moment" para o real)
     await page.waitForFunction(
       () => !document.title.includes('momento') && !document.title.includes('Just a moment'),
-      { timeout: 20000 }
+      { timeout: 30000 }
     ).catch(() => {});
 
-    await page.waitForTimeout(2000);
+    // Aguarda o campo de email aparecer (mais robusto que fill direto)
+    await page.waitForSelector('input[name="email"]', { timeout: 30000 });
 
     // Preenche os campos
     await page.fill('input[name="email"]', email);

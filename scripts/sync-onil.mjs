@@ -221,7 +221,12 @@ async function scrapeClients() {
   // Login
   process.stderr.write('🔐 Fazendo login...\n');
   await page.goto('https://broker.onilgroup.com.br/login', { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.waitForTimeout(2000);
+  // Aguarda Cloudflare passar e o formulário aparecer
+  await page.waitForFunction(
+    () => !document.title.includes('momento') && !document.title.includes('Just a moment'),
+    { timeout: 30000 }
+  ).catch(() => {});
+  await page.waitForSelector('input[name="email"]', { timeout: 30000 });
   await page.fill('input[name="email"]', LOGIN);
   await page.fill('input[type="password"]', SENHA);
   await page.click('button[type="submit"]');
