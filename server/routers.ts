@@ -747,17 +747,28 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const scriptPath = path.resolve(process.cwd(), "scripts/onil-auth.mjs");
 
-        // Valida credenciais no portal Onil
-        const result = await new Promise<any>((resolve, reject) => {
-          execFile("node", [scriptPath, input.email, input.password], {
-            timeout: 40000,
-            maxBuffer: 1024 * 1024,
-          }, (err, stdout) => {
-            if (err) return reject(new Error("Erro ao validar credenciais"));
-            try { resolve(JSON.parse(stdout)); }
-            catch { reject(new Error("Resposta inválida do validador")); }
+        // Modo bypass para desenvolvimento local (DEV_BYPASS_AUTH=true no .env)
+        const devBypass = process.env.DEV_BYPASS_AUTH === "true";
+        const devEmail = process.env.DEV_BYPASS_EMAIL || "";
+        const isDevUser = devBypass && input.email === devEmail;
+
+        let result: any;
+        if (isDevUser) {
+          console.log("[Auth] DEV BYPASS ativo — pulando validação Onil");
+          result = { valid: true, name: devEmail.split("@")[0], company: "Dev", email: input.email };
+        } else {
+          // Valida credenciais no portal Onil via Playwright
+          result = await new Promise<any>((resolve, reject) => {
+            execFile("node", [scriptPath, input.email, input.password], {
+              timeout: 60000,
+              maxBuffer: 1024 * 1024,
+            }, (err, stdout) => {
+              if (err) return reject(new Error("Erro ao validar credenciais"));
+              try { resolve(JSON.parse(stdout)); }
+              catch { reject(new Error("Resposta inválida do validador")); }
+            });
           });
-        });
+        }
 
         if (!result.valid) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: result.error || "Credenciais da Onil inválidas" });
