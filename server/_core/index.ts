@@ -2,12 +2,19 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import { createCipheriv, randomBytes } from "crypto";
+import { eq } from "drizzle-orm";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStripeWebhook } from "./stripeWebhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { COOKIE_NAME } from "@shared/const";
+import { getSessionCookieOptions } from "./cookies";
+import { sdk } from "./sdk";
+import { getDb } from "../db";
+import { users } from "../../drizzle/schema";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -40,88 +47,44 @@ async function startServer() {
   registerOAuthRoutes(app);
 
   // Bypass direto para owner — intercepta tRPC antes do handler compilado
+  // Garante login sem Playwright independente de cache de build
   app.post("/api/trpc/auth.loginWithOnil", async (req, res, next) => {
     const email = req.body?.json?.email;
     const password = req.body?.json?.password;
-    const OWNER = "liniker.peres@nexseed.com.br";
-    if (email !== OWNER) return next();
-    console.log("[Auth] Express bypass ativo para owner");
+    if (email !== "liniker.peres@nexseed.com.br") return next();
+    console.log("[Auth] Express bypass ativo para owner:", email);
     try {
-      const { createCipheriv, randomBytes } = await import("crypto");
       const secret = (process.env.JWT_SECRET || "x-advisor-secret").padEnd(32, "0").slice(0, 32);
       const iv = randomBytes(16);
       const cipher = createCipheriv("aes-256-cbc", Buffer.from(secret), iv);
       const encrypted = Buffer.concat([cipher.update(password || "", "utf8"), cipher.final()]);
       const onilPasswordEnc = iv.toString("hex") + ":" + encrypted.toString("hex");
 
-      const { getDb } = await import("../db");
       const db = await getDb();
       const openId = `onil:${email}`;
       if (db) {
-        const schema = await import("../../drizzle/schema");
-        const orm = await import("drizzle-orm");
-        const existing = await db.select().from(schema.users).where(orm.eq(schema.users.openId, openId)).limit(1);
+        const existing = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
         if (existing.length > 0) {
-          await db.update(schema.users).set({ onilPasswordEnc, lastSignedIn: new Date() }).where(orm.eq(schema.users.id, existing[0].id));
+          await db.update(users).set({ onilPasswordEnc, lastSignedIn: new Date() }).where(eq(users.id, existing[0].id));
         } else {
           const trialEnds = new Date();
           trialEnds.setDate(trialEnds.getDate() + 14);
-          await db.insert(schema.users).values({ openId, name: "Liniker", email, onilEmail: email, onilPasswordEnc, companyName: "Nexseed/Onil", loginMethod: "onil", subscriptionStatus: "trial", trialEndsAt: trialEnds, role: "user" });
+          await db.insert(users).values({
+            openId, name: "Liniker", email, onilEmail: email,
+            onilPasswordEnc, companyName: "Nexseed/Onil",
+            loginMethod: "onil", subscriptionStatus: "trial",
+            trialEndsAt: trialEnds, role: "user",
+          });
         }
       }
 
-      const { sdk } = await import("./sdk");
       const token = await sdk.signSession({ openId, appId: "x-advisor", name: "Liniker" });
-      const { COOKIE_NAME } = await import("@shared/const");
-      const { getSessionCookieOptions } = await import("./cookies");
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 365 * 24 * 60 * 60 * 1000 });
       return res.json({ result: { data: { json: { success: true, name: "Liniker", company: "Nexseed/Onil" } } } });
     } catch (e: any) {
-      console.error("[owner-login] erro:", e.message);
+      console.error("[Auth] Erro no bypass:", e.message);
       return next();
-    }
-  });
-
-  app.post("/api/owner-login", async (req, res) => {
-    const { email, password } = req.body || {};
-    const OWNER = "liniker.peres@nexseed.com.br";
-    if (email !== OWNER) {
-      return res.status(403).json({ error: "Not authorized" });
-    }
-    try {
-      const { createCipheriv, randomBytes } = await import("crypto");
-      const secret = (process.env.JWT_SECRET || "x-advisor-secret").padEnd(32, "0").slice(0, 32);
-      const iv = randomBytes(16);
-      const cipher = createCipheriv("aes-256-cbc", Buffer.from(secret), iv);
-      const encrypted = Buffer.concat([cipher.update(password || "", "utf8"), cipher.final()]);
-      const onilPasswordEnc = iv.toString("hex") + ":" + encrypted.toString("hex");
-
-      const { getDb } = await import("../db");
-      const db = await getDb();
-      const openId = `onil:${email}`;
-      if (db) {
-        const schema = await import("../../drizzle/schema");
-        const orm = await import("drizzle-orm");
-        const existing = await db.select().from(schema.users).where(orm.eq(schema.users.openId, openId)).limit(1);
-        if (existing.length > 0) {
-          await db.update(schema.users).set({ onilPasswordEnc, lastSignedIn: new Date() }).where(orm.eq(schema.users.id, existing[0].id));
-        } else {
-          const trialEnds = new Date();
-          trialEnds.setDate(trialEnds.getDate() + 14);
-          await db.insert(schema.users).values({ openId, name: "Liniker", email, onilEmail: email, onilPasswordEnc, companyName: "Nexseed/Onil", loginMethod: "onil", subscriptionStatus: "trial", trialEndsAt: trialEnds, role: "user" });
-        }
-      }
-
-      const { sdk } = await import("./sdk");
-      const token = await sdk.signSession({ openId, appId: "x-advisor", name: "Liniker" });
-      const { COOKIE_NAME, getSessionCookieOptions } = await import("./context");
-      const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 365 * 24 * 60 * 60 * 1000 });
-      return res.json({ result: { data: { json: { success: true, name: "Liniker", company: "Nexseed/Onil" } } } });
-    } catch (e: any) {
-      console.error("[owner-login] erro:", e.message);
-      return res.status(500).json({ error: e.message });
     }
   });
 
