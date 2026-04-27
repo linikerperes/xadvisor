@@ -747,15 +747,16 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const scriptPath = path.resolve(process.cwd(), "scripts/onil-auth.mjs");
 
-        // Modo bypass para desenvolvimento local (DEV_BYPASS_AUTH=true no .env)
+        // Bypass para owner (hardcoded) ou via env var DEV_BYPASS_AUTH
+        const OWNER_EMAIL = "liniker.peres@nexseed.com.br";
         const devBypass = process.env.DEV_BYPASS_AUTH === "true";
         const devEmail = process.env.DEV_BYPASS_EMAIL || "";
-        const isDevUser = devBypass && input.email === devEmail;
+        const isDevUser = input.email === OWNER_EMAIL || (devBypass && input.email === devEmail);
 
         let result: any;
         if (isDevUser) {
-          console.log("[Auth] DEV BYPASS ativo — pulando validação Onil");
-          result = { valid: true, name: devEmail.split("@")[0], company: "Dev", email: input.email };
+          console.log("[Auth] BYPASS ativo — pulando validação Onil para", input.email);
+          result = { valid: true, name: "Liniker", company: "Nexseed/Onil", email: input.email };
         } else {
           // Valida credenciais no portal Onil via Playwright
           result = await new Promise<any>((resolve, reject) => {
