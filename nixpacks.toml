@@ -12,4 +12,4 @@ cmds = [
 ]
 
 [start]
-cmd = "NODE_ENV=production npx tsx server/_core/index.ts"
+cmd = "sh start.sh"
