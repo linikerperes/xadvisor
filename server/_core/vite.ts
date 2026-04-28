@@ -48,10 +48,13 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(import.meta.dirname, "../..", "dist", "public")
-      : path.resolve(import.meta.dirname, "public");
+  // Suporta tanto `node dist/index.js` quanto `tsx server/_core/index.ts`
+  const candidates = [
+    path.resolve(import.meta.dirname, "public"),           // node dist/index.js
+    path.resolve(import.meta.dirname, "../..", "dist", "public"), // tsx source
+    path.resolve(process.cwd(), "dist", "public"),          // fallback
+  ];
+  const distPath = candidates.find(p => fs.existsSync(p)) ?? candidates[0];
   if (!fs.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
